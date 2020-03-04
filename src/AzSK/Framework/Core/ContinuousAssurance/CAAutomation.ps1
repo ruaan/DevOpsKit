@@ -45,7 +45,7 @@ class CCAutomation: AzCommandBase
 	[bool] $AltLAWSVariablesExist = $false;
 	[bool] $OMSVariablesExist = $false;
 	[bool] $AltOMSVariablesExist = $false;
-	
+
 	CCAutomation(
 	[string] $subscriptionId, `
 	[InvocationInfo] $invocationContext, `
@@ -158,6 +158,17 @@ class CCAutomation: AzCommandBase
 		}
 	}
 
+	hidden [bool] CheckRBACAccess($UserId, $Scope, $Role)
+	{
+		$RoleAssignments = Get-AzRoleAssignment -SignInName $UserId  -Scope $Scope -RoleDefinitionName $Role
+		if(($RoleAssignments|Measure-Object).count -gt 0)
+		{
+			$hasAccess = ($RoleAssignments | Where-Object {$_.scope -eq $Scope -and $_.RoleDefinitionName -eq $Role}).count -gt 0
+			return $hasAccess	
+        }
+        return $false
+	}
+
 	hidden [void] SetLAWSSettings([string] $laWSId, [string] $laWSSharedKey,[string] $altLAWSId, [string] $altLAWSSharedKey)
 	{
 		if($this.UserConfig)
@@ -216,8 +227,15 @@ class CCAutomation: AzCommandBase
 	[MessageData[]] InstallAzSKContinuousAssurance()
     {
 		[MessageData[]] $messages = @();
+
 		try
 		{
+			$checkIfHasOwnerAccessForSub = $this.CheckRBACAccess((Get-AzContext).Account.Id,$this.SubscriptionContext.SubscriptionId,"Owner");
+			if ($checkIfHasOwnerAccessForSub -eq $false)
+			{
+				$this.PublishCustomMessage("Insufficient acess permissions to run this command",[MessageType]::error)
+				return $messages;
+			}
 			#Validate if command is running from local policy folder
 			$this.ValidateIfLocalPolicyIsEnabled()
 
@@ -518,6 +536,12 @@ class CCAutomation: AzCommandBase
 		[MessageData[]] $messages = @();
 		try
 		{
+			$checkIfHasOwnerAccessForSub = $this.CheckRBACAccess((Get-AzContext).Account.Id,$this.SubscriptionContext.SubscriptionId,"Owner");
+			if ($checkIfHasOwnerAccessForSub -eq $false)
+			{
+				$this.PublishCustomMessage("Insufficient acess permissions to run this command.",[MessageType]::error)
+				return $messages;
+			}
 			#Validate if command is running with local policy
 			$this.ValidateIfLocalPolicyIsEnabled()
 
@@ -1589,6 +1613,16 @@ class CCAutomation: AzCommandBase
 			#region: Step 4: Check if all the dependent modules are loaded
 			$stepCount++			
 			$checkDescription = "Inspecting CA module: $($azskModuleName)'s dependent modules. This may take a few min..."
+
+			# Check if user has owner/Contributor access to reportsStorageAccount
+				$hasContributorAccessForStorageAccount = $this.CheckRBACAccess((Get-AzContext).Account.Id,$this.SubscriptionContext.SubscriptionId,"Contributor");
+				$hasOwnerAccessForStorageAccount = $this.CheckRBACAccess((Get-AzContext).Account.Id,$this.SubscriptionContext.SubscriptionId,"Contributor");
+				if (($hasContributorAccessForStorageAccount -eq $false) -and ($hasOwnerAccessForStorageAccount -eq $false))
+				{
+					$resultStatus = "Skipped"
+					$resultMsg = "No sufficient access permissions for this check."
+				}
+
 			if($this.ExhaustiveCheck)
 			{
 				$azskModuleWithVersion = Get-AzAutomationModule -AutomationAccountName $this.AutomationAccount.Name `
@@ -2160,6 +2194,16 @@ class CCAutomation: AzCommandBase
 		#region: Step 13: Check if storage account rec'd scan logs in last 3 days 
 		$stepCount++
 		$checkDescription = "Inspecting AzSK storage account for scan logs from recent jobs."
+		
+		# Check if user has owner/Contributor access to reportsStorageAccount
+		$hasContributorAccessForStorageAccount = $this.CheckRBACAccess((Get-AzContext).Account.Id,$this.SubscriptionContext.SubscriptionId,"Contributor");
+		$hasOwnerAccessForStorageAccount = $this.CheckRBACAccess((Get-AzContext).Account.Id,$this.SubscriptionContext.SubscriptionId,"Contributor");
+		if (($hasContributorAccessForStorageAccount -eq $false) -and ($hasOwnerAccessForStorageAccount -eq $false))
+		{
+			$resultStatus = "Skipped"
+			$resultMsg = "No sufficient access permissions for this check."
+		}
+
 		$caUpdatedTimeInterval= $null
 		try{
 			$automationTags = $caAutomationAccount.Tags
@@ -2356,6 +2400,17 @@ class CCAutomation: AzCommandBase
 	[MessageData[]] RemoveAzSKContinuousAssurance($DeleteStorageReports,$Force)
 	{
 		[MessageData[]] $messages = @();
+		try {
+			$checkIfHasOwnerAccessForSub = $this.CheckRBACAccess((Get-AzContext).Account.Id,$this.SubscriptionContext.SubscriptionId,"Owner");
+			if ($checkIfHasOwnerAccessForSub -eq $false)
+			{
+				$this.PublishCustomMessage("Insufficient acess permissions to run this command",[MessageType]::error)
+				return $messages;
+			}
+		}
+		catch{
+			throw ([SuppressedException]::new(("Removal of Continuous Assurance setup not completed."), [SuppressedExceptionType]::Generic))
+		}
 		$isCentralScanModeEnabled = $false;
 		$this.PublishCustomMessage("This command will delete resources in your subscription which were installed by AzSK Continuous Assurance",[MessageType]::Warning);
 		$messages += [MessageData]::new("This command will delete resources in your subscription which were installed by AzSK Continuous Assurance",[MessageType]::Warning);
