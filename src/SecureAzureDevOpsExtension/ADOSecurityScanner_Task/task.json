@@ -12,7 +12,7 @@
   "version": {
     "Major": 1,
     "Minor": 0,
-    "Patch": 34
+    "Patch": 35
   },
   "demands": [
   ],
@@ -44,12 +44,21 @@
       "helpMarkDown": "Comma-separated list of projects against which Security Verification should be run."
     },
     {
+      "name": "EnableProjectScan",
+      "type": "boolean",
+      "label": "Enable Project components (Build/Release/Connections/AgentPool)",
+      "defaultValue": "false",
+      "helpMarkDown": "Enable this option to scan all Build/Release/Connections/AgentPool",
+      "required": false
+    },
+    {
       "name": "BuildNames",
       "type": "string",
       "label": "Build Names",
       "defaultValue": "",
       "required": false,
-      "helpMarkDown": "Comma-separated list of builds against which Security Verification Tests (SVTs) should be run or use '*' to scan all builds."
+      "helpMarkDown": "Comma-separated list of builds against which Security Verification Tests (SVTs) should be run or use '*' to scan all builds.",
+      "visibleRule": "EnableFullScan=true"
     },
     {
       "name": "ReleaseNames",
@@ -57,7 +66,8 @@
       "label": "Release Names",
       "defaultValue": "",
       "required": false,
-      "helpMarkDown": "Comma-separated list of releases against which Security Verification Tests (SVTs) should be run or use '*' to scan all releases."
+      "helpMarkDown": "Comma-separated list of releases against which Security Verification Tests (SVTs) should be run or use '*' to scan all releases.",
+      "visibleRule": "EnableFullScan=true"
     },
     {
       "name": "ServiceConnectionNames",
@@ -65,7 +75,8 @@
       "label": "Service Connection Names",
       "defaultValue": "",
       "required": false,
-      "helpMarkDown": "Comma-separated list of service connections against which Security Verification Tests (SVTs) should be run or use '*' to scan all service connections."
+      "helpMarkDown": "Comma-separated list of service connections against which Security Verification Tests (SVTs) should be run or use '*' to scan all service connections.",
+      "visibleRule": "EnableFullScan=true"
     },
     {
       "name": "AgentPoolNames",
@@ -73,7 +84,8 @@
       "label": "Agent Pool Names",
       "defaultValue": "",
       "required": false,
-      "helpMarkDown": "Comma-separated list of agent pools against which Security Verification Tests (SVTs) should be run or use '*' to scan all agent pools."
+      "helpMarkDown": "Comma-separated list of agent pools against which Security Verification Tests (SVTs) should be run or use '*' to scan all agent pools.",
+      "visibleRule": "EnableFullScan=true"
     },
     {
       "name": "isBaseline",
@@ -82,6 +94,14 @@
       "defaultValue": true,
       "required": false,
       "helpMarkDown": ""
+    },
+    {
+      "name": "EnableOMSLogging",
+      "type": "boolean",
+      "label": "Send events to Log Analytics",
+      "defaultValue": "false",
+      "helpMarkDown": "Enable this option to publish SVT evaluation results to a Log Analytics Workspace (specified via environment variables).",
+      "required": false
     }
   ],
   "execution": {

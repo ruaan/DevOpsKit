@@ -3,12 +3,15 @@
 #Get VSTS input parameters values
 $OrgName = Get-VstsInput -Name OrgName
 $ProjectNames = Get-VstsInput -Name ProjectNames
+/#$EnableFullScanVal = Get-VstsInput -Name EnableFullScan
+
 $BuildNames = Get-VstsInput -Name BuildNames
 $ReleaseNames = Get-VstsInput -Name ReleaseNames
 $ServiceConnectionNames = Get-VstsInput -Name ServiceConnectionNames
 $AgentPoolNames = Get-VstsInput -Name AgentPoolNames
 
 $BaseLine = Get-VstsInput -Name isBaseline
+$EnableLAWSLoggingVal = Get-VstsInput -Name EnableOMSLogging
 
 $PreviewBaseLine = Get-VstsTaskVariable -Name -UPBC
 $Severity = Get-VstsTaskVariable -Name Severity
@@ -113,7 +116,7 @@ try {
     {
 		$scanCommand += "-ProjectNames ""$ProjectNames"" ";    
     }
-    
+	
 	if(-not [string]::IsNullOrEmpty($BuildNames))
 	{
 		$scanCommand += "-BuildNames ""$BuildNames"" ";
@@ -159,6 +162,35 @@ try {
 	$scanCommand
 	
 	$ReportFolderPath;
+
+    if(-not [string]::IsNullOrWhiteSpace($EnableLAWSLoggingVal) -and $EnableLAWSLoggingVal -eq $true)
+    {
+		if([string]::IsNullOrWhiteSpace($LAWSIdVal))
+		{
+			$LAWSIdVal = Get-VstsTaskVariable -Name "OMSWorkspaceId"
+			$LAWSIdVal = $LAWSIdVal.Trim();
+		}
+		if([string]::IsNullOrWhiteSpace($LAWSSharedKeyVal))
+		{
+			$LAWSSharedKeyVal = Get-VstsTaskVariable -Name "OMSSharedKey"
+			$LAWSSharedKeyVal = $LAWSSharedKeyVal.Trim();
+		}
+
+        if(-not [string]::IsNullOrWhiteSpace($LAWSIdVal) -and -not [string]::IsNullOrWhiteSpace($LAWSSharedKeyVal))
+        {
+            Write-Host "Setting up Log Analytics workspace configuration..." -ForegroundColor Yellow
+            Set-AzSKOMSSettings -OMSSharedKey $LAWSSharedKeyVal -OMSWorkspaceID $LAWSIdVal -Source "CICD"
+        }
+        else {
+            Write-Host "Log Analytics workspace configuration is missing. Check variables..." -ForegroundColor Yellow
+        }        
+    }
+    else {
+            Write-Host "Log Analytics workspace logging is turned off." -ForegroundColor Yellow
+    }    
+
+	#clear session state
+	Clear-AzSKSessionState
 
 	if($BaseLine -eq $true)
 	{
