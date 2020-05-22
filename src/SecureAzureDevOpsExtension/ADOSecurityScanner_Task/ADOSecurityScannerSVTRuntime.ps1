@@ -12,6 +12,8 @@ $AgentPoolNames = Get-VstsInput -Name AgentPoolNames
 
 $BaseLine = Get-VstsInput -Name isBaseline
 $EnableLAWSLoggingVal = Get-VstsInput -Name EnableOMSLogging
+$LAWSSharedKeyVal = Get-VstsTaskVariable -Name "LAWSSharedKey" -ErrorAction SilentlyContinue
+$LAWSIdVal = Get-VstsTaskVariable -Name "LAWSId" -ErrorAction SilentlyContinue
 
 $PreviewBaseLine = Get-VstsTaskVariable -Name -UPBC
 $Severity = Get-VstsTaskVariable -Name Severity
