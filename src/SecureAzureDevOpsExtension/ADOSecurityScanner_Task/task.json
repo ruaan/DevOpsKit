@@ -33,7 +33,7 @@
       "label": "Organization Name",
       "defaultValue": "$(System.CollectionUri)",
       "required": true,
-      "helpMarkDown": "Org name for which scan needs to be performed. Default value is set to current org."
+      "helpMarkDown": "Org name for which scan needs to be performed. Default value is set to current organization."
     },
     {
       "name": "ProjectNames",
