@@ -76,6 +76,7 @@
          "ResourceLocked"
       ],
       "Enabled": true,
+      "AttestationExpiryinDays": 180,
       "FixControl": {
         "FixMethodName": "EnableAuditOnAuthN",
         "FixControlImpact": "Low"

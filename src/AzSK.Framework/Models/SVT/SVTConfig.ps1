@@ -27,7 +27,8 @@ class ControlItem
     [string] $Automated = ""
     [string[]] $Tags = @()
     [bool] $Enabled   
-    hidden [string] $MethodName = ""   
+    hidden [string] $MethodName = ""
+    [int] $AttestationExpiryinDays    
     [string] $Recommendation = ""   
     [string] $Rationale = ""   
     hidden [string[]] $DataObjectProperties = @()
