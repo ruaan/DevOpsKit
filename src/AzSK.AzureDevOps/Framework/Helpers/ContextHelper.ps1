@@ -147,8 +147,15 @@ class ContextHelper {
         $contextObj = [Context]::new()
         $contextObj.Account.Id = [string]::Empty
         $contextObj.Tenant.Id =  [string]::Empty
-        $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($patToken)
-        $contextObj.AccessToken = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+        if ( $Global:ScanSource -eq "CA")
+        {
+            $contextObj.AccessToken = $Global:PAT;
+        }
+        else
+        {
+            $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($patToken)
+            $contextObj.AccessToken = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+        }
         
         # Here subscription basically means ADO organization (due to framework).
         # We do not get ADO organization Id as part of current context. Hence appending org name to both Id and Name param.
